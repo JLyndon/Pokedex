@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <title>Pokedex</title>
+    <script src="script.js" defer></script>
 </head>
 <body style="background-color: rgb(212, 212, 212);">
     <main class="container">
@@ -17,7 +18,7 @@
                 <div class="search-wrapper">
                     <div class="search-container">                        
                         <img src="assets/Search_Icon.svg" alt="Search Icon">
-                        <input type="text" class="search-input-bar" placeholder="Search">
+                        <input type="text" class="search-input-bar" placeholder="Search" id="search-bar">
                     </div>
                 </div>
                 <div class="sort-wrapper">
@@ -28,11 +29,11 @@
                         <p class="secondary-body">Sort by:</p>
                         <div class="filter-wrap">
                             <div>
-                                <input type="radio" name="filters" value="number" checked>
+                                <input type="radio" name="filters" value="number" id="number" checked>
                                 <label for="number">Number</label>                        
                              </div>
                              <div>
-                                <input type="radio" name="filters" value="name">
+                                <input type="radio" name="filters" value="name" id="name">
                                 <label for="name">Name</label>                        
                              </div>
                         </div>
@@ -44,7 +45,7 @@
             <div class="major-container">
                 <div class="list-wrapper"></div>
             </div>
-            <div class="not-found">
+            <div class="not-found" id="not-found">
                 Pokemon not found
             </div>
         </section>
