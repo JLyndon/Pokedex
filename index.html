@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Pokedex</title>
+</head>
+<body style="background-color: rgb(212, 212, 212);">
+    <main class="container">
+        <header class="header-home">
+           <div class="head-container">
+                <div class="logo-wrapper">
+                    <img src="assets/Pokeball_Icon.svg" alt="Pokeball Icon">
+                    <h1>Pokedex</h1>
+                </div>
+                <div class="search-wrapper">
+                    <div class="search-container">                        
+                        <img src="assets/Search_Icon.svg" alt="Search Icon">
+                        <input type="text" class="search-input-bar" placeholder="Search">
+                    </div>
+                </div>
+                <div class="sort-wrapper">
+                    <div class="sort-icon">                    
+                        <img src="assets/Sort_Icon.svg" alt="Soft Alfa">
+                    </div>
+                    <div class="filter-wrapper">
+                        <p class="secondary-body">Sort by:</p>
+                        <div class="filter-wrap">
+                            <div>
+                                <input type="radio" name="filters" value="number" checked>
+                                <label for="number">Number</label>                        
+                             </div>
+                             <div>
+                                <input type="radio" name="filters" value="name">
+                                <label for="name">Name</label>                        
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <section class="pokemon-card-list">
+
+        </section>
+    </main>
+</body>
+<script src="script.js"></script>
+</html>
