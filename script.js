@@ -16,13 +16,20 @@ async function fetchPokemons() {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
     const data = await response.json();
     const allPokemons = data.results;
-    displayPokemons(allPokemons);
+
+    const detailedPokemons = await Promise.all(
+      allPokemons.map(pokemon => fetch(pokemon.url).then(res => res.json()))
+    );
+
+    displayPokemons(allPokemons, detailedPokemons);
     isLoading = false;
   } catch (error) {
+    console.log(error)
     console.error("Failed to fetch Pokémon data");
     isLoading = false;
   }
 }
+
 
 async function fetchPokemonDataBeforeRedirect(id) {
   try {
@@ -36,8 +43,9 @@ async function fetchPokemonDataBeforeRedirect(id) {
   }
 }
 
-function displayPokemons(pokemon) {
-  pokemon.forEach((pokemon) => {
+
+function displayPokemons(pokemon, details) {
+  pokemon.forEach((pokemon, index) => {
     const pokemonID = pokemon.url.split("/")[6];
     const formatted_pkmn_ID = pokemonID.padStart(3, '0');
     const listItem = document.createElement("div");
@@ -54,6 +62,18 @@ function displayPokemons(pokemon) {
       </div>
     `;
 
+    const typesWrap = document.createElement("div");
+    typesWrap.className = "types-wrap";
+
+    details[index].types.forEach(typeInfo => {
+      const typeDiv = document.createElement("div");
+      typeDiv.className = "type";
+      typeDiv.textContent = typeInfo.type.name;
+      typesWrap.appendChild(typeDiv);
+    });
+
+    listItem.appendChild(typesWrap);
+
     listItem.addEventListener("click", async () => {
       const success = await fetchPokemonDataBeforeRedirect(pokemonID);
       if (success) {
@@ -67,7 +87,7 @@ function displayPokemons(pokemon) {
 
 // Infinite scroll event listener
 window.addEventListener("scroll", () => {
-  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 && !isLoading) {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 150 && !isLoading) {
     offset += limit;
     fetchPokemons();
   }
