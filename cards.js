@@ -1,5 +1,6 @@
 const limit = 10;
 const searchBar = document.querySelector("#search-bar");
+const searchBtn = document.querySelector(".search-btn");
 const listWrap = document.querySelector(".list-wrapper");
 const nameFilter = document.querySelector("#name");
 const numberFilter = document.querySelector("#number");
@@ -84,6 +85,10 @@ function displayPokemons(pokemon, details) {
     listWrap.appendChild(listItem);
   });
 }
+
+searchBtn.addEventListener("click", () => {
+  console.log("clicked");
+});
 
 // Infinite scroll event listener
 window.addEventListener("scroll", () => {
