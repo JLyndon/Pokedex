@@ -11,26 +11,40 @@ let isLoading = false;
 
 fetchPokemons();
 
-async function fetchPokemons() {
+async function fetchPokemons(searchQuery = "") {
   try {
     isLoading = true;
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
     const data = await response.json();
-    const allPokemons = data.results;
+    let allPokemons = data.results;
+
+    if (searchQuery) {
+      // Filter Pokémon based on the search query
+      allPokemons = allPokemons.filter(pokemon => {
+        const pokemonID = pokemon.url.split("/")[6];
+        return pokemonID.includes(searchQuery) || pokemon.name.includes(searchQuery.toLowerCase());
+      });
+    }
 
     const detailedPokemons = await Promise.all(
       allPokemons.map(pokemon => fetch(pokemon.url).then(res => res.json()))
     );
 
+    if (offset === 0) {
+      listWrap.innerHTML = ""; // Clear the list only if it's a fresh fetch (not infinite scroll)
+    }
+
     displayPokemons(allPokemons, detailedPokemons);
     isLoading = false;
   } catch (error) {
-    console.log(error)
+    console.log(error);
     console.error("Failed to fetch Pokémon data");
     isLoading = false;
   }
 }
-
 
 async function fetchPokemonDataBeforeRedirect(id) {
   try {
@@ -44,11 +58,64 @@ async function fetchPokemonDataBeforeRedirect(id) {
   }
 }
 
+async function searchPokemon(query) {
+  try {
+    isLoading = true;
+    const searchResults = [];
 
-function displayPokemons(pokemon, details) {
-  pokemon.forEach((pokemon, index) => {
-    const pokemonID = pokemon.url.split("/")[6];
-    const formatted_pkmn_ID = pokemonID.padStart(3, '0');
+    // Fetch all Pokémon to filter based on the search query
+    let offset = 0;
+    let keepFetching = true;
+
+    while (keepFetching) {
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Filter Pokémon based on the query
+      const filteredPokemons = data.results.filter(pokemon => {
+        const pokemonID = pokemon.url.split("/")[6];
+        return pokemonID.includes(query) || pokemon.name.includes(query.toLowerCase());
+      });
+
+      searchResults.push(...filteredPokemons);
+
+      if (data.next) {
+        offset += limit;
+      } else {
+        keepFetching = false;
+      }
+    }
+
+    const detailedPokemons = await Promise.all(
+      searchResults.map(pokemon => fetch(pokemon.url).then(res => res.json()))
+    );
+
+    // Display the filtered Pokémon
+    displayPokemons(searchResults, detailedPokemons);
+    isLoading = false;
+  } catch (error) {
+    console.log(error);
+    console.error("Failed to fetch Pokémon data");
+    isLoading = false;
+  }
+}
+
+function displayPokemons(pokemonList, details) {
+  pokemonList.forEach((pokemon, index) => {
+    let pokemonID, formatted_pkmn_ID;
+
+    if (pokemon.url) {
+      pokemonID = pokemon.url.split("/")[6];
+    } else {
+      // If `pokemon.url` is not available, use `pokemon.id`
+      pokemonID = pokemon.id.toString();
+    }
+
+    formatted_pkmn_ID = pokemonID.padStart(3, '0');
+
     const listItem = document.createElement("div");
     listItem.className = "list-item";
     listItem.innerHTML = `
@@ -75,19 +142,16 @@ function displayPokemons(pokemon, details) {
 
     listItem.appendChild(typesWrap);
 
-    // listItem.addEventListener("click", async () => {
-    //   const success = await fetchPokemonDataBeforeRedirect(pokemonID);
-    //   if (success) {
-    //     window.location.href = `./detail.html?id=${pokemonID}`;
-    //   }
-    // });
-
     listWrap.appendChild(listItem);
   });
 }
 
 searchBtn.addEventListener("click", () => {
-  console.log("clicked");
+  const query = searchBar.value.trim();
+  if (query) {
+    listWrap.innerHTML = "";
+    searchPokemon(query);
+  }
 });
 
 // Infinite scroll event listener
