@@ -139,6 +139,11 @@ searchBtn.addEventListener("click", () => {
     isSearchMode = true;
     listWrap.innerHTML = "";
     searchPokemon(query);
+  } else {
+    isSearchMode = false;
+    offset = 0;
+    listWrap.innerHTML = "";
+    fetchPokemons();
   }
 });
 
