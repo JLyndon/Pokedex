@@ -8,10 +8,12 @@ const notFoundMessage = document.querySelector(".not-found");
 
 let offset = 0;
 let isLoading = false;
+let searchQuery = "";
+let isSearchMode = false;
 
 fetchPokemons();
 
-async function fetchPokemons(searchQuery = "") {
+async function fetchPokemons() {
   try {
     isLoading = true;
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
@@ -20,14 +22,6 @@ async function fetchPokemons(searchQuery = "") {
     }
     const data = await response.json();
     let allPokemons = data.results;
-
-    if (searchQuery) {
-      // Filter Pokémon based on the search query
-      allPokemons = allPokemons.filter(pokemon => {
-        const pokemonID = pokemon.url.split("/")[6];
-        return pokemonID.includes(searchQuery) || pokemon.name.includes(searchQuery.toLowerCase());
-      });
-    }
 
     const detailedPokemons = await Promise.all(
       allPokemons.map(pokemon => fetch(pokemon.url).then(res => res.json()))
@@ -43,18 +37,6 @@ async function fetchPokemons(searchQuery = "") {
     console.log(error);
     console.error("Failed to fetch Pokémon data");
     isLoading = false;
-  }
-}
-
-async function fetchPokemonDataBeforeRedirect(id) {
-  try {
-    const [pokemon, pokemonSpecies] = await Promise.all([
-      fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((res) => res.json()),
-      fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then((res) => res.json()),
-    ]);
-    return true;
-  } catch (error) {
-    console.error("Failed to fetch Pokémon data");
   }
 }
 
@@ -90,11 +72,14 @@ async function searchPokemon(query) {
     }
 
     const detailedPokemons = await Promise.all(
-      searchResults.map(pokemon => fetch(pokemon.url).then(res => res.json()))
+      searchResults.slice(0, limit).map(pokemon => fetch(pokemon.url).then(res => res.json()))
     );
 
     // Display the filtered Pokémon
-    displayPokemons(searchResults, detailedPokemons);
+    listWrap.innerHTML = "";
+    displayPokemons(searchResults.slice(0, limit), detailedPokemons);
+    searchResultsRemaining = searchResults.slice(limit);
+
     isLoading = false;
   } catch (error) {
     console.log(error);
@@ -149,6 +134,9 @@ function displayPokemons(pokemonList, details) {
 searchBtn.addEventListener("click", () => {
   const query = searchBar.value.trim();
   if (query) {
+    searchQuery = query;
+    offset = 0;
+    isSearchMode = true;
     listWrap.innerHTML = "";
     searchPokemon(query);
   }
@@ -157,7 +145,20 @@ searchBtn.addEventListener("click", () => {
 // Infinite scroll event listener
 window.addEventListener("scroll", () => {
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 150 && !isLoading) {
-    offset += limit;
-    fetchPokemons();
+    if (isSearchMode) {
+      if (searchResultsRemaining.length > 0) {
+        const nextBatch = searchResultsRemaining.slice(0, limit);
+        searchResultsRemaining = searchResultsRemaining.slice(limit);
+
+        Promise.all(
+          nextBatch.map(pokemon => fetch(pokemon.url).then(res => res.json()))
+        ).then(detailedPokemons => {
+          displayPokemons(nextBatch, detailedPokemons);
+        });
+      }
+    } else {
+      offset += limit;
+      fetchPokemons();
+    }
   }
 });
